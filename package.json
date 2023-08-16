@@ -1,14 +1,23 @@
 {
-  "name": "sainsbury",
+  "name": "schroders",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@faker-js/faker": "^8.0.2",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.4.0",
+    "bootstrap": "^5.3.1",
+    "chart.js": "^4.3.3",
+    "moment": "^2.29.4",
     "react": "^18.2.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
+    "react-redux": "^8.1.2",
+    "react-router-dom": "^6.15.0",
     "react-scripts": "5.0.1",
+    "react-select": "^5.7.4",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -34,5 +43,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "faker": "^5.5.3",
+    "sass": "^1.65.1"
   }
 }
