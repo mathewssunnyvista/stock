@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { Fragment, useContext, useEffect, useState } from "react";
 
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
@@ -6,12 +6,35 @@ import makeAnimated from "react-select/animated";
 import { fetchStockSymbols } from "../../api";
 import { StockSymbolContext } from "../../context";
 
+import DateTimeRangePicker from "@wojtekmaj/react-datetimerange-picker";
+
+import "@wojtekmaj/react-datetimerange-picker/dist/DateTimeRangePicker.css";
+import "react-calendar/dist/Calendar.css";
+import "react-clock/dist/Clock.css";
+import "primereact/resources/themes/lara-light-indigo/theme.css";
+import "primereact/resources/primereact.min.css";
+
+import { SelectButton } from "primereact/selectbutton";
+
 const animatedComponents = makeAnimated();
+
+const priceTypeOptions = [
+  { value: "c", label: "Close" },
+  { value: "h", label: "High" },
+  { value: "l", label: "Low" },
+  { value: "o", label: "Open" },
+];
 
 export default function Stock() {
   const [stocks, setStocks] = useState([]);
+  const [value, onChange] = useState([new Date(), new Date()]);
   const { selectedOptions, setSelectedOptions } =
     useContext(StockSymbolContext);
+
+  const { selectedPriceType, setSelectedPriceType } =
+    useContext(StockSymbolContext);
+
+
 
   const getStockSymbols = async () => {
     try {
@@ -37,27 +60,41 @@ export default function Stock() {
   }, []);
 
   return (
-    <div class="row m-3">
-      <div class="col-2">Search Stocks</div>
-      <div class="col-6">
-        <Select
-          closeMenuOnSelect={false}
-          components={animatedComponents}
-          isMulti
-          value={selectedOptions}
-          onChange={(o) => setSelectedOptions(o)}
-          isOptionDisabled={() => selectedOptions.length >= 3}
-          className="basic-multi-select"
-          classNamePrefix="select"
-          options={stocks}
-        />
+    <Fragment>
+      <div class="row m-3">
+        <div class="col-2">Stocks</div>
+        <div class="col-4">
+          <Select
+            closeMenuOnSelect={true}
+            components={animatedComponents}
+            isMulti
+            value={selectedOptions}
+            onChange={(o) => setSelectedOptions(o)}
+            isOptionDisabled={() => selectedOptions.length >= 3}
+            className="basic-multi-select"
+            classNamePrefix="select"
+            options={stocks}
+          />
+        </div>
       </div>
-      <div class="col-4">
-      From TO datapicker
+      <div class="row m-3">
+        <div class="col-2">Date</div>
+        <div class="col-4">
+          <DateTimeRangePicker onChange={onChange} value={value} />
+        </div>
       </div>
-      <div class="col-4">
-       price filter open close etc
+
+      <div class="row m-3">
+        <div class="col-2">Price Type</div>
+        <div class="col-4">
+          <SelectButton
+            value={selectedPriceType}
+            onChange={(e) => setSelectedPriceType(e.value)}
+            optionLabel="label"
+            options={priceTypeOptions}
+          />
+        </div>
       </div>
-    </div>
+    </Fragment>
   );
 }

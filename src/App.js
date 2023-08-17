@@ -12,6 +12,7 @@ import { StockSymbolContext } from "./context";
 
 function App() {
   const [selectedOptions, setSelectedOptions] = React.useState([]);
+  const [selectedPriceType, setSelectedPriceType] = React.useState("o");
 
   return (
     <div className="container">
@@ -20,7 +21,12 @@ function App() {
       </nav>
 
       <StockSymbolContext.Provider
-        value={{ selectedOptions, setSelectedOptions }}
+        value={{
+          selectedOptions,
+          setSelectedOptions,
+          selectedPriceType,
+          setSelectedPriceType,
+        }}
       >
         <Dashboard />
       </StockSymbolContext.Provider>
