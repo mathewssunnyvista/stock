@@ -65,35 +65,62 @@ export const data = {
 
 export default function Chart() {
   const [chartOptions, setChartOptions] = useState([]);
-  const [chartDataset, setChartDataset] = useState([]);
-  const [chartLabels, setChartLabels] = useState([]);
+  /// const [chartDataset, setChartDataset] = useState([]);
+  // const [chartLabels, setChartLabels] = useState([]);
   const { selectedOptions } = useContext(StockSymbolContext);
 
   useEffect(() => {
     const getStockCandles = async (stockSymbol, from, to) => {
       try {
-        let chartDatasets = [...chartDataset];
+        let dataSetItemFound;
+        let chartDatasets = [];
+        console.log("chartOptions", chartOptions);
+        if (chartOptions && chartOptions?.datasets) {
+          console.log("chartOptions inside", chartOptions);
+          chartDatasets = [...chartOptions?.datasets];
+          dataSetItemFound = chartDatasets.find(
+            (item) => item.label === stockSymbol.label
+          );
+        }
 
-        const dataSetItem = {
-          label: stockSymbol.label,
-          data: [],
-          borderColor: faker.vehicle.color(),
-          backgroundColor: faker.vehicle.color(),
-        };
+        const dataSetItem = dataSetItemFound
+          ? dataSetItemFound
+          : {
+              label: stockSymbol.label,
+              data: [],
+              borderColor: faker.vehicle.color(),
+              backgroundColor: faker.vehicle.color(),
+            };
 
-        let chartLabels = [];
+        // let chartLabels = [];
         const stockPrices = await fetchStockCandles(
           stockSymbol.value,
           from,
           to
         );
+
+        console.log(stockPrices, "stockPrices");
         if (stockPrices?.s === "ok") {
-          chartLabels = [...stockPrices.t];
-          setChartLabels(chartLabels);
+          const labels = [...stockPrices.t];
+          // setChartLabels(chartLabels);
           dataSetItem.data = [...stockPrices.c];
-          chartDatasets.push(dataSetItem);
-          setChartDataset(chartDatasets);
+          console.log("dataSetItem", dataSetItem);
+          console.log("dataSetItemFound", dataSetItemFound);
+          console.log("chartDatasets", chartDatasets);
+          if (dataSetItemFound === undefined) chartDatasets.push(dataSetItem);
+
+          const datasets = [...chartDatasets];
+          console.log("ooipoipi", datasets);
+          //setChartDataset(chartDatasets);
+          const chartOptions = {
+            labels,
+            datasets,
+          };
+          
+          setChartOptions(chartOptions);
         }
+        console.log("chartOptions", chartOptions);
+        console.log("insideddd");
       } catch (error) {
         console.error(error);
       }
@@ -101,25 +128,27 @@ export default function Chart() {
     // const dataSets = [];
     let from = "1673476980";
     let to = "1679476980";
-    if (selectedOptions) {
+    if (selectedOptions && selectedOptions.length > 0) {
       selectedOptions.map((item) => {
         getStockCandles(item, from, to);
       });
+    } else {
+      setChartOptions([]);
     }
   }, [selectedOptions]);
 
-  useEffect(() => {
-    let datasets = [...chartDataset];
-    let labels = [...chartLabels];
-    const chartOptions = {
-      labels,
-      datasets,
-    };
-    setChartOptions(chartOptions);
-  }, [chartDataset]);
+  // useEffect(() => {
+  //   let datasets = [...chartDataset];
+  //   let labels = [...chartLabels];
+  //   const chartOptions = {
+  //     labels,
+  //     datasets,
+  //   };
+  //   setChartOptions(chartOptions);
+  // }, [chartDataset]);
 
   console.log(chartOptions, "chartOptions");
-  console.log(data, "data");
+  console.log(selectedOptions, "selectedOptions");
   return (
     <div class="row">
       <div class="col-12">

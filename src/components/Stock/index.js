@@ -39,7 +39,7 @@ export default function Stock() {
   return (
     <div class="row m-3">
       <div class="col-2">Search Stocks</div>
-      <div class="col-10">
+      <div class="col-6">
         <Select
           closeMenuOnSelect={false}
           components={animatedComponents}
@@ -51,6 +51,12 @@ export default function Stock() {
           classNamePrefix="select"
           options={stocks}
         />
+      </div>
+      <div class="col-4">
+      From TO datapicker
+      </div>
+      <div class="col-4">
+       price filter open close etc
       </div>
     </div>
   );
