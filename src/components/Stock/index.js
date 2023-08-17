@@ -34,8 +34,6 @@ export default function Stock() {
   const { selectedPriceType, setSelectedPriceType } =
     useContext(StockSymbolContext);
 
-
-
   const getStockSymbols = async () => {
     try {
       const exchange = "US";
@@ -43,7 +41,7 @@ export default function Stock() {
       const stocks = await fetchStockSymbols(exchange);
       if (stocks) {
         stocks.map((item, index) => {
-          if (index < 20) {
+          if (index < 50) {
             //  need to check pagination options
             stockOptions.push({ value: item.symbol, label: item.description });
           }

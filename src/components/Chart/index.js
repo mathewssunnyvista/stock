@@ -14,6 +14,7 @@ import { Line } from "react-chartjs-2";
 import { faker } from "@faker-js/faker";
 import { StockSymbolContext } from "../../context";
 import { fetchStockCandles } from "../../api";
+import moment from "moment";
 
 ChartJS.register(
   CategoryScale,
@@ -37,7 +38,11 @@ export const options = {
     },
   },
 };
-const labels = ["January", "February", "March", "April", "May", "June", "July"];
+// const labels = ["January", "February", "March", "April", "May", "June", "July"];
+
+let labels = [];
+let format_day = "DD-MM-YYYY";
+let format_time = "h:mm:ss a";
 
 export const data = {
   labels,
@@ -67,7 +72,7 @@ export default function Chart() {
   const [chartOptions, setChartOptions] = useState([]);
   /// const [chartDataset, setChartDataset] = useState([]);
   // const [chartLabels, setChartLabels] = useState([]);
-  const { selectedOptions } = useContext(StockSymbolContext);
+  const { selectedOptions, selectedPriceType } = useContext(StockSymbolContext);
 
   useEffect(() => {
     const getStockCandles = async (stockSymbol, from, to) => {
@@ -100,8 +105,18 @@ export default function Chart() {
         );
 
         console.log(stockPrices, "stockPrices");
+        console.log(stockPrices[selectedPriceType], "stockPrices");
         if (stockPrices?.s === "ok") {
-          const labels = [...stockPrices.t];
+          if (stockPrices?.t.length > 0) {
+            //need to check array computer with a same function without looping
+
+            stockPrices.t.map((item) => {
+              labels.push(moment.unix(item).format(format_day));
+            });
+          }
+          //  const labels = [...stockPrices.t];
+
+          console.log("selectedPriceType", selectedPriceType);
           // setChartLabels(chartLabels);
           dataSetItem.data = [...stockPrices.c];
           console.log("dataSetItem", dataSetItem);
@@ -116,7 +131,7 @@ export default function Chart() {
             labels,
             datasets,
           };
-          
+
           setChartOptions(chartOptions);
         }
         console.log("chartOptions", chartOptions);
@@ -135,7 +150,7 @@ export default function Chart() {
     } else {
       setChartOptions([]);
     }
-  }, [selectedOptions]);
+  }, [selectedOptions, selectedPriceType]);
 
   // useEffect(() => {
   //   let datasets = [...chartDataset];
