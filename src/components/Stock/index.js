@@ -8,45 +8,29 @@ import { faker } from "@faker-js/faker";
 import { fetchStockCandles, fetchStockSymbols } from "../../api";
 import { StockSymbolContext } from "../../context";
 
-import DateTimeRangePicker from "@wojtekmaj/react-datetimerange-picker";
+// import DateTimeRangePicker from "@wojtekmaj/react-datetimerange-picker";
 
-import "@wojtekmaj/react-datetimerange-picker/dist/DateTimeRangePicker.css";
-import "react-calendar/dist/Calendar.css";
-import "react-clock/dist/Clock.css";
-import "primereact/resources/themes/lara-light-indigo/theme.css";
-import "primereact/resources/primereact.min.css";
+// import "@wojtekmaj/react-datetimerange-picker/dist/DateTimeRangePicker.css";
+// import "react-calendar/dist/Calendar.css";
+// import "react-clock/dist/Clock.css";
 
-import { SelectButton } from "primereact/selectbutton";
 import { Chart } from "..";
 import moment from "moment";
+import {
+  date_format_day,
+  exchange,
+  // resolutionOptions,
+} from "../../utils/constants";
 
-const animatedComponents = makeAnimated();
+import { getUnixTimeStamp } from "../../utils";
+import PriceType from "./priceType";
+import Resolutions from "./resolutions";
+import DateFilter from "./dateFilter";
+import SelectStocks from "./selectStocks";
 
-//Defines the various price options available in stock candle api
-const priceTypeOptions = [
-  { value: "c", label: "Close" },
-  { value: "h", label: "High" },
-  { value: "l", label: "Low" },
-  { value: "o", label: "Open" },
-];
-
-
-//Defines the various resolutions options available in stock candle api
-
-const resolutions = [
-  { value: 1, label: "Last 1 Days" },
-  { value: 5, label: "Last 5 Days" },
-  { value: 15, label: "Last 15 Days" },
-  { value: 30, label: "Last 30 Days" },
-  { value: 60, label: "Last 60 Days" },
-  { value: "W", label: "Weekly" },
-  { value: "M", label: "Monthly" },
-  { value: "D", label: "Daily" },
-];
-
-let format_day = "DD-MM-YYYY";
 
 export default function Stock() {
+  const [isLoading, setIsLoading] = useState(false);
   const [stocks, setStocks] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [chartOptions, setChartOptions] = useState([]);
@@ -59,18 +43,22 @@ export default function Stock() {
   const { selectedPriceType, setSelectedPriceType } =
     useContext(StockSymbolContext);
 
+  const { selectedResolution, setSelectedResolution } =
+    useContext(StockSymbolContext);
+
   const getStockSymbols = async () => {
     try {
-      const exchange = "US";
+      setIsLoading(true);
       let stockOptions = [];
       const stocks = await fetchStockSymbols(exchange);
       if (stocks) {
         stocks.map((item, index) => {
-          if (index < 200) {
+          if (index < 300) {
             //  need to check pagination options
             stockOptions.push({ value: item.symbol, label: item.description });
           }
         });
+        setIsLoading(false);
         setStocks(stockOptions);
       }
     } catch (error) {
@@ -78,26 +66,25 @@ export default function Stock() {
     }
   };
 
-  const getUnixTimeStamp = (dateVal) => {
-    return Math.floor(new Date(dateVal).getTime() / 1000);
-  };
-
-  const handlePriceChange = (value) => {
-    setSelectedPriceType(value);
+  const handlePriceChange = (priceType) => {
+    setSelectedPriceType(priceType.value);
 
     const chartOption = { ...chartOptions };
     if (chartOption.datasets) {
       chartOption.datasets.map((item) => {
-        item.data = item.stockData[value];
+        item.data = item.stockData[priceType.value];
       });
     }
     setChartOptions(chartOption);
   };
 
-  const handleSelectChange = async (selectedStocks) => {
-    // Setting multi select values
-    setSelectedOptions(selectedStocks);
+  const handleDateChange = async (value) => {
+    console.log("dateTIme", value);
+    console.log(selectedOptions, "selectedStocks");
+    onChange(value);
+  };
 
+  const fetchStockCandleData = async (selectedStocks) => {
     // pop out the last element to process stock candle (price api)
     const selectedStock = selectedStocks[selectedStocks.length - 1];
     const chartDatas = [...chartData];
@@ -117,7 +104,7 @@ export default function Stock() {
       //Data range provided to the api should in unix time stamp
       const from = getUnixTimeStamp(value[0]);
       const to = getUnixTimeStamp(value[1]);
-      const resolution = resolutions[0].value;
+      const resolution = selectedResolution.value;
       const stockData = await fetchStockCandles(
         selectedStock.value,
         resolution,
@@ -139,7 +126,20 @@ export default function Stock() {
       setChartData(chartDatas);
       // This method will be parsing through api data which should be consumable to charts.
       formatChartData(chartDatas, selectedStocks);
+    } else {
+      setChartOptions({});
     }
+  };
+
+  const handleSelectChange = async (selectedStocks) => {
+    // Setting multi select values
+    setSelectedOptions(selectedStocks);
+
+    fetchStockCandleData(selectedStocks);
+  };
+
+  const handleResolutonChange = async (resolution) => {
+    setSelectedResolution(resolution);
   };
 
   const formatChartData = (chartDatas, selectedStocks) => {
@@ -167,11 +167,13 @@ export default function Stock() {
       const chartLabels = [];
       chartOption.labels.sort();
       chartOption.labels.map((item) => {
-        chartLabels.push(moment.unix(item).format(format_day));
+        chartLabels.push(moment.unix(item).format(date_format_day));
       });
       chartOption.labels = chartLabels;
-      setChartOptions(chartOption);
     }
+
+    console.log(chartOption, "chartOption");
+    setChartOptions(chartOption);
   };
 
   useEffect(() => {
@@ -180,7 +182,7 @@ export default function Stock() {
 
   return (
     <Fragment>
-      <div class="row m-3">
+      {/* <div class="row m-3">
         <div class="col-2">Stocks</div>
         <div class="col-4">
           <Select
@@ -188,6 +190,7 @@ export default function Stock() {
             components={animatedComponents}
             isMulti
             value={selectedOptions}
+            isLoading={isLoading}
             onChange={handleSelectChange}
             isOptionDisabled={() => selectedOptions.length >= 3}
             className="basic-multi-select"
@@ -195,25 +198,53 @@ export default function Stock() {
             options={stocks}
           />
         </div>
-      </div>
-      <div class="row m-3">
+      </div> */}
+      <SelectStocks
+        value={selectedOptions}
+        isLoading={isLoading}
+        onChange={handleSelectChange}
+        options={stocks}
+      />
+
+      {/* <div class="row m-3">
         <div class="col-2">Date</div>
         <div class="col-4">
-          <DateTimeRangePicker onChange={onChange} value={value} />
+          <DateTimeRangePicker onChange={handleDateChange} value={value} />
         </div>
-      </div>
-
+      </div> */}
+      <DateFilter onChange={handleDateChange} value={value} />
+      {/* 
       <div class="row m-3">
+        <div class="col-2">Resolution</div>
+        <div class="col-4">
+          <Select
+            value={selectedResolution}
+            onChange={handleResolutonChange}
+            classNamePrefix="select"
+            options={resolutionOptions}
+          />
+        </div>
+      </div> */}
+
+      {/* <div class="row m-3">
         <div class="col-2">Price Type</div>
         <div class="col-4">
           <SelectButton
             value={selectedPriceType}
-            onChange={(e) => handlePriceChange(e.value)}
+            onChange={handlePriceChange}
             optionLabel="label"
             options={priceTypeOptions}
           />
         </div>
-      </div>
+
+      </div> */}
+
+      <Resolutions
+        value={selectedResolution}
+        onChange={handleResolutonChange}
+      />
+
+      <PriceType value={selectedPriceType} onChange={handlePriceChange} />
       <Chart data={chartOptions} />
     </Fragment>
   );

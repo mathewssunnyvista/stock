@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 
 import {
   Chart as ChartJS,
@@ -71,13 +71,32 @@ export const data1 = {
 export default function Chart(props) {
   const { data } = props;
 
-  console.log(data,"data")
+  console.log(data, "data");
 
   return (
-    <div class="row">
-      <div class="col-12">
-        {data?.datasets && <Line options={options} data={data} />}
+    <Fragment>
+      <div class="row">
+        <div class="col-12">
+          {data?.datasets && <Line options={options} data={data} />}
+        </div>
       </div>
-    </div>
+    </Fragment>
   );
+}
+
+{
+  /* 
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-xs-12 col-sm-6">
+      <div class="chart">
+        <div class="no-chart-data">
+          <h2 class="title">No data for curent period</h2>
+          <div class="radial">
+            <div class="outer-circle"></div>
+            <div class="inner-circle"></div>
+          </div>
+        </div>
+      </div>
+    </div> */
 }
