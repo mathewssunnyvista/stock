@@ -43,3 +43,32 @@ export const fetchStockCandles = async (stockSymbol, resolution, from, to) => {
 
   return data;
 };
+
+/**
+ * Fetches the stocks prices including Open, High, Low, Close Prices
+ * @param {string} stockSymbols - Array of Symbol of the company, e.g. ['AAPL','BBT']
+ * @param {string} from - The stock prices from provided timestamp , e.g. '1679476980'
+ * @param {string} to - The stock prices till provided timestamp , e.g. '1679476980'
+ * @returns {Promise<Object>} Response object
+ */
+export const fetchMultiStockCandles = async (
+  stockSymbols,
+  resolution,
+  from,
+  to
+) => {
+  const url = [];
+  stockSymbols.map((item) => {
+    url.push(
+      `${basePath}/stock/candle?symbol=${item.value}&resolution=${resolution}&from=${from}&to=${to}&token=${token}`
+    );
+  });
+
+  const data = await axios.all(url.map((urlItem) => axios.get(urlItem))).then(
+    axios.spread(function (...res) {
+      // all requests are now complete
+      return res.map((resItem) => resItem.data);
+    })
+  );
+  return data;
+};

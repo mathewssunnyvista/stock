@@ -1,11 +1,11 @@
 import React, { Fragment, useContext, useEffect, useState } from "react";
 
-import Select from "react-select";
-import makeAnimated from "react-select/animated";
+// import Select from "react-select";
+// import makeAnimated from "react-select/animated";
 
 import { faker } from "@faker-js/faker";
 
-import { fetchStockCandles, fetchStockSymbols } from "../../api";
+import { fetchMultiStockCandles, fetchStockCandles, fetchStockSymbols } from "../../api";
 import { StockSymbolContext } from "../../context";
 
 // import DateTimeRangePicker from "@wojtekmaj/react-datetimerange-picker";
@@ -34,9 +34,14 @@ export default function Stock() {
   const [stocks, setStocks] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [chartOptions, setChartOptions] = useState([]);
+
+
   const endDate = new Date();
   const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const [value, onChange] = useState([startDate, endDate]);
+
+
+  
   const { selectedOptions, setSelectedOptions } =
     useContext(StockSymbolContext);
 
@@ -79,9 +84,8 @@ export default function Stock() {
   };
 
   const handleDateChange = async (value) => {
-    console.log("dateTIme", value);
-    console.log(selectedOptions, "selectedStocks");
-    onChange(value);
+    onChange(value)
+    updateStockData()
   };
 
   const fetchStockCandleData = async (selectedStocks) => {
@@ -131,6 +135,8 @@ export default function Stock() {
     }
   };
 
+  
+
   const handleSelectChange = async (selectedStocks) => {
     // Setting multi select values
     setSelectedOptions(selectedStocks);
@@ -140,7 +146,25 @@ export default function Stock() {
 
   const handleResolutonChange = async (resolution) => {
     setSelectedResolution(resolution);
+    updateStockData()
+
   };
+
+
+  const updateStockData = async() => {
+    const stockSelected =  selectedOptions;
+    const from = getUnixTimeStamp(value[0]);
+    const to = getUnixTimeStamp(value[1]);
+    const resolution = selectedResolution.value;
+    const stockData = await fetchMultiStockCandles(
+      stockSelected,
+      resolution,
+      from,
+      to
+    );
+
+    console.log(stockData, "stockData");
+  }
 
   const formatChartData = (chartDatas, selectedStocks) => {
     // Need to align the chartdata with respect to current seletion of stocks
