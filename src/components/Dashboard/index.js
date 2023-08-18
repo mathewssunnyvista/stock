@@ -1,11 +1,10 @@
 import React, { Fragment } from "react";
-import { Stock,Chart } from "..";
+import { Stock } from "..";
 
 export default function Dashboard() {
   return (
     <Fragment>
       <Stock />
-      <Chart />
     </Fragment>
   );
 }
