@@ -18,6 +18,7 @@ import "primereact/resources/primereact.min.css";
 
 import { SelectButton } from "primereact/selectbutton";
 import { Chart } from "..";
+import moment from "moment";
 
 const animatedComponents = makeAnimated();
 
@@ -27,6 +28,9 @@ const priceTypeOptions = [
   { value: "l", label: "Low" },
   { value: "o", label: "Open" },
 ];
+
+let format_day = "DD-MM-YYYY";
+let format_time = "h:mm:ss a";
 
 export default function Stock() {
   const [stocks, setStocks] = useState([]);
@@ -62,6 +66,18 @@ export default function Stock() {
     return Math.floor(new Date(dateVal).getTime() / 1000);
   };
 
+  const handlePriceChange = (value) => {
+    setSelectedPriceType(value);
+
+    const chartOption = { ...chartOptions };
+    if (chartOption.datasets) {
+      chartOption.datasets.map((item) => {
+        item.data = item.stockData[value];
+      });
+    }
+    setChartOptions(chartOption);
+  };
+
   const handleSelectChange = async (selectedStocks) => {
     // Setting multi select values
     setSelectedOptions(selectedStocks);
@@ -90,13 +106,14 @@ export default function Stock() {
       if (stockData?.s === "ok") {
         dataSetItem.stockData = stockData;
         dataSetItem.data = stockData[selectedPriceType];
+        chartDatas.push(dataSetItem);
       }
       if (stockData?.s === "no_data") {
+        //No need to send to chart as the stock doesnt have price details
         dataSetItem.stockData = [];
         dataSetItem.data = [];
       }
 
-      chartDatas.push(dataSetItem);
       setChartData(chartDatas);
       // This method will be parsing through api data which should be consumable to charts.
       formatChartData(chartDatas, selectedStocks);
@@ -105,16 +122,14 @@ export default function Stock() {
 
   const formatChartData = (chartDatas, selectedStocks) => {
     // Need to align the chartdata with respect to current seletion of stocks
-    const chartOption = { labels: [], dataset: [] };
+    const chartOption = { labels: [], datasets: [] };
     if (selectedStocks && chartDatas) {
       selectedStocks.map((selectedStock) => {
         let dataSetItemFound = chartDatas.find(
           (item) => item.label === selectedStock.label
         );
         if (dataSetItemFound) {
-          console.log(dataSetItemFound, "ddddd");
           if (dataSetItemFound?.stockData) {
-            console.log(dataSetItemFound?.stockData?.t);
             // Need to remove duplicate timestamp inorder to map to various values of stocks
             chartOption.labels = [
               ...new Set([
@@ -124,9 +139,14 @@ export default function Stock() {
             ];
             //Based on the price type the prices need to be changed.
           }
-          chartOption.dataset.push(dataSetItemFound);
+          chartOption.datasets.push(dataSetItemFound);
         }
       });
+      const chartLabels = []
+      chartOption.labels.map((item) => {
+        chartLabels.push(moment.unix(item).format(format_day));
+      });
+      chartOption.labels = chartLabels
       setChartOptions(chartOption);
     }
   };
@@ -146,7 +166,6 @@ export default function Stock() {
             isMulti
             value={selectedOptions}
             onChange={handleSelectChange}
-            // onChange={(o) => setSelectedOptions(o)}
             isOptionDisabled={() => selectedOptions.length >= 3}
             className="basic-multi-select"
             classNamePrefix="select"
@@ -166,7 +185,7 @@ export default function Stock() {
         <div class="col-4">
           <SelectButton
             value={selectedPriceType}
-            onChange={(e) => setSelectedPriceType(e.value)}
+            onChange={(e) => handlePriceChange(e.value)}
             optionLabel="label"
             options={priceTypeOptions}
           />
