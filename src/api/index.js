@@ -29,8 +29,8 @@ export const fetchStockSymbols = async (exchange) => {
  * @param {string} to - The stock prices till provided timestamp , e.g. '1679476980'
  * @returns {Promise<Object>} Response object
  */
- export const fetchStockCandles = async (stockSymbol, from, to) => {
-  const url = `${basePath}/stock/candle?symbol=${stockSymbol}&resolution=M&from=${from}&to=${to}&token=${token}`;
+export const fetchStockCandles = async (stockSymbol, resolution, from, to) => {
+  const url = `${basePath}/stock/candle?symbol=${stockSymbol}&resolution=${resolution}&from=${from}&to=${to}&token=${token}`;
   const data = await axios
     .get(url)
     .then((response) => {

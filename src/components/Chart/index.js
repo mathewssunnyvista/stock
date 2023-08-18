@@ -70,6 +70,9 @@ export const data1 = {
 
 export default function Chart(props) {
   const { data } = props;
+
+  console.log(data,"data")
+
   return (
     <div class="row">
       <div class="col-12">

@@ -29,8 +29,18 @@ const priceTypeOptions = [
   { value: "o", label: "Open" },
 ];
 
+const resolutions = [
+  { value: 1, label: "Last 1 Days" },
+  { value: 5, label: "Last 5 Days" },
+  { value: 15, label: "Last 15 Days" },
+  { value: 30, label: "Last 30 Days" },
+  { value: 60, label: "Last 60 Days" },
+  { value: "W", label: "Weekly" },
+  { value: "M", label: "Monthly" },
+  { value: "D", label: "Daily" },
+];
+
 let format_day = "DD-MM-YYYY";
-let format_time = "h:mm:ss a";
 
 export default function Stock() {
   const [stocks, setStocks] = useState([]);
@@ -101,7 +111,13 @@ export default function Stock() {
       //Data range provided to the api should in unix time stamp
       const from = getUnixTimeStamp(value[0]);
       const to = getUnixTimeStamp(value[1]);
-      const stockData = await fetchStockCandles(selectedStock.value, from, to);
+      const resolution = resolutions[3].value;
+      const stockData = await fetchStockCandles(
+        selectedStock.value,
+        resolution,
+        from,
+        to
+      );
 
       if (stockData?.s === "ok") {
         dataSetItem.stockData = stockData;
@@ -142,11 +158,12 @@ export default function Stock() {
           chartOption.datasets.push(dataSetItemFound);
         }
       });
-      const chartLabels = []
+      const chartLabels = [];
+      chartOption.labels.sort()
       chartOption.labels.map((item) => {
         chartLabels.push(moment.unix(item).format(format_day));
       });
-      chartOption.labels = chartLabels
+      chartOption.labels = chartLabels;
       setChartOptions(chartOption);
     }
   };
