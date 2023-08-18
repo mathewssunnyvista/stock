@@ -1,25 +1,23 @@
 import React, { Fragment, useContext, useEffect, useState } from "react";
 
-// import Select from "react-select";
-// import makeAnimated from "react-select/animated";
-
 import { faker } from "@faker-js/faker";
 
-import { fetchMultiStockCandles, fetchStockCandles, fetchStockSymbols } from "../../api";
+import {
+  fetchStockCandle,
+  fetchStockCandles,
+  fetchStockSymbols,
+} from "../../api";
+
 import { StockSymbolContext } from "../../context";
 
-// import DateTimeRangePicker from "@wojtekmaj/react-datetimerange-picker";
-
-// import "@wojtekmaj/react-datetimerange-picker/dist/DateTimeRangePicker.css";
-// import "react-calendar/dist/Calendar.css";
-// import "react-clock/dist/Clock.css";
+import { isEmpty } from "lodash";
 
 import { Chart } from "..";
 import moment from "moment";
 import {
   date_format_day,
   exchange,
-  // resolutionOptions,
+  stock_limit,
 } from "../../utils/constants";
 
 import { getUnixTimeStamp } from "../../utils";
@@ -28,20 +26,16 @@ import Resolutions from "./resolutions";
 import DateFilter from "./dateFilter";
 import SelectStocks from "./selectStocks";
 
-
 export default function Stock() {
   const [isLoading, setIsLoading] = useState(false);
   const [stocks, setStocks] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [chartOptions, setChartOptions] = useState([]);
 
-
   const endDate = new Date();
   const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const [value, onChange] = useState([startDate, endDate]);
 
-
-  
   const { selectedOptions, setSelectedOptions } =
     useContext(StockSymbolContext);
 
@@ -51,25 +45,41 @@ export default function Stock() {
   const { selectedResolution, setSelectedResolution } =
     useContext(StockSymbolContext);
 
-  const getStockSymbols = async () => {
-    try {
-      setIsLoading(true);
-      let stockOptions = [];
-      const stocks = await fetchStockSymbols(exchange);
-      if (stocks) {
-        stocks.map((item, index) => {
-          if (index < 300) {
-            //  need to check pagination options
-            stockOptions.push({ value: item.symbol, label: item.description });
-          }
+  /**
+   * Updates the stock price data whenever resolution, date gets changed
+   * Need to update the price of already plotted stock details.
+   * Multiple stocks are updated in a single API call
+   *
+   * @returns null
+   */
+
+  const updateStockData = async () => {
+    const stockSelected = [...selectedOptions];
+    if (!isEmpty(stockSelected)) {
+      const from = getUnixTimeStamp(value[0]);
+      const to = getUnixTimeStamp(value[1]);
+
+      const stockData = await fetchStockPrices(
+        stockSelected,
+        from,
+        to,
+        selectedResolution.value
+      );
+
+      if (stockData && stockData.length > 0) {
+        stockData.map((stockItem, index) => {
+          setStockChartItem(stockItem, stockSelected[index]);
         });
-        setIsLoading(false);
-        setStocks(stockOptions);
       }
-    } catch (error) {
-      console.error(error);
     }
   };
+  /**
+   * Handles the change in price type (High, Low, Close,Open price)
+   * @param {string} priceType - Object of Price Type Stocks of the company, e.g. {value:'h', Label:'High'}
+   * This methods invoked when price type filter is changed
+   * The y axis values are replaced from temporary attribute from dataset.
+   * @returns null
+   */
 
   const handlePriceChange = (priceType) => {
     setSelectedPriceType(priceType.value);
@@ -83,17 +93,105 @@ export default function Stock() {
     setChartOptions(chartOption);
   };
 
+  /**
+   * Handles the change in date filter (time range)
+   * @param {string} value -time object including start date and end date
+   * This methods invoked when date range picker filter is changed
+   * @returns null
+   */
+
   const handleDateChange = async (value) => {
-    onChange(value)
-    updateStockData()
+    onChange(value);
+  };
+  /**
+   * Handles the change in resolution filter (timeframes)
+   * @param {string} resolution -timeframes , e.g. {1, 5, 15, 30, 60, D, W, M}
+   * This methods invoked when resolution filter is changed
+   * @returns null
+   */
+
+  const handleResolutonChange = async (resolution) => {
+    setSelectedResolution(resolution);
   };
 
-  const fetchStockCandleData = async (selectedStocks) => {
-    // pop out the last element to process stock candle (price api)
-    const selectedStock = selectedStocks[selectedStocks.length - 1];
+  /**
+   * Format Stock Chart Items to match react chart 2 format
+   *
+   * Each stock chart items are added to datasets in which data is plotted against y-axis
+   * The timestamp of different stock prices are grouped, sorted and formated plotted against x axis.
+   *
+   * @returns {<Object>} Chart object with labels and datasets
+   */
+
+  const formatChartData = () => {
     const chartDatas = [...chartData];
+    const selectedStocks = [...selectedOptions];
+    // Need to align the chartdata with respect to current seletion of stocks
+    const chartOption = { labels: [], datasets: [] };
+    if (!isEmpty(selectedStocks) && !isEmpty(chartDatas)) {
+      selectedStocks.map((selectedStock) => {
+        let dataSetItemFound = chartDatas.find(
+          (item) => item.label === selectedStock.label
+        );
+        if (dataSetItemFound) {
+          if (dataSetItemFound?.stockData) {
+            // Timestamp need to be grouped without duplicates.
+            chartOption.labels = [
+              ...new Set([
+                ...dataSetItemFound?.stockData?.t,
+                ...chartOption.labels,
+              ]),
+            ];
+          }
+          chartOption.datasets.push(dataSetItemFound);
+        }
+      });
+      //Need to check the possibilty of apply same behaviour to all array elements without looping.
+      const chartLabels = [];
+      if (!isEmpty(chartOption?.labels)) {
+        chartOption.labels.sort();
+        chartOption.labels.map((item) => {
+          chartLabels.push(moment.unix(item).format(date_format_day));
+        });
+        chartOption.labels = chartLabels;
+      }
+    }
+    setChartOptions(chartOption);
+  };
+
+  /**
+   * fetch Stock Prices
+   * @param {string} selectedStock - Object of Symbol Stocks of the company, e.g. {value:'AAPL', Label:'APPLE'}
+   * @param {string} from - Prices from StartDate provided as unixtimestamp, e.g. 1690925486
+   * @param {string} to - Prices till StartDate provided as unixtimestamp, e.g. 1690925486
+   * @param {string} resolution - timeframes , e.g. {1, 5, 15, 30, 60, D, W, M}
+   *
+   * API is consumed in single / multple call based on stockSelection.
+   * Single call is used to update multple stock values already plotted in chart.
+   * @returns {Promise<Object>} Response object
+   */
+
+  const fetchStockPrices = async (stockSelected, from, to, resolution) => {
+    const stockData = Array.isArray(stockSelected)
+      ? await fetchStockCandles(stockSelected, resolution, from, to)
+      : await fetchStockCandle(stockSelected.value, resolution, from, to);
+    return stockData;
+  };
+
+  /**
+   * Stock data are processed to react chart 2 format
+   * @param {string} stockData - Object of Stocks Prices including close, high, low and open attributes
+   * @param {string} selectedStock - Object of Symbol Stocks of the company, e.g. {value:'AAPL', Label:'APPLE'}
+   * The selected stocks attributes with random color and its price is added as a chart item
+   * All price type amounts are saved in a temporary attribute to process later based on price type changes.
+   *
+   * @returns null
+   */
+
+  const setStockChartItem = (stockData, selectedStock) => {
+    const chartDatas = [...chartData];
+
     if (selectedStock) {
-      // If the stock is already added to the list need to update the data part only as rest can be kept as such
       let dataSetItemFound = chartDatas.find(
         (item) => item.label === selectedStock.label
       );
@@ -105,16 +203,6 @@ export default function Stock() {
             borderColor: faker.vehicle.color(),
             backgroundColor: faker.vehicle.color(),
           };
-      //Data range provided to the api should in unix time stamp
-      const from = getUnixTimeStamp(value[0]);
-      const to = getUnixTimeStamp(value[1]);
-      const resolution = selectedResolution.value;
-      const stockData = await fetchStockCandles(
-        selectedStock.value,
-        resolution,
-        from,
-        to
-      );
 
       if (stockData?.s === "ok") {
         dataSetItem.stockData = stockData;
@@ -126,148 +214,105 @@ export default function Stock() {
         dataSetItem.stockData = [];
         dataSetItem.data = [];
       }
-
       setChartData(chartDatas);
-      // This method will be parsing through api data which should be consumable to charts.
-      formatChartData(chartDatas, selectedStocks);
+      formatChartData(chartDatas, selectedOptions);
+    }
+  };
+
+  /**
+   * Fetches stock prices based on  stock selections
+   * This methods invked whenever selected stocks changes.
+   * Based on recent selection its stock price is consumed to set chart items.
+   * @returns null
+   */
+
+  const fetchSelectedStockPrice = async () => {
+    const selectedStocks = [...selectedOptions];
+    if (!isEmpty(selectedStocks)) {
+      const selectedStock = selectedStocks[selectedStocks.length - 1];
+
+      const from = getUnixTimeStamp(value[0]);
+      const to = getUnixTimeStamp(value[1]);
+      const resolution = selectedResolution.value;
+
+      const stockData = await fetchStockPrices(
+        selectedStock,
+        from,
+        to,
+        resolution
+      );
+      setStockChartItem(stockData, selectedStock);
     } else {
       setChartOptions({});
     }
   };
 
-  
+  /**
+   * Handles the change in select filter
+   * @param {string} selectedStocks - Object of Symbol Stocks of the company, e.g. {value:'AAPL', Label:'APPLE'}
+   * This methods invked when select filter is changed and stock gets selected on multi select.
+   * @returns null
+   */
 
   const handleSelectChange = async (selectedStocks) => {
-    // Setting multi select values
     setSelectedOptions(selectedStocks);
-
-    fetchStockCandleData(selectedStocks);
   };
 
-  const handleResolutonChange = async (resolution) => {
-    setSelectedResolution(resolution);
-    updateStockData()
-
-  };
-
-
-  const updateStockData = async() => {
-    const stockSelected =  selectedOptions;
-    const from = getUnixTimeStamp(value[0]);
-    const to = getUnixTimeStamp(value[1]);
-    const resolution = selectedResolution.value;
-    const stockData = await fetchMultiStockCandles(
-      stockSelected,
-      resolution,
-      from,
-      to
-    );
-
-    console.log(stockData, "stockData");
-  }
-
-  const formatChartData = (chartDatas, selectedStocks) => {
-    // Need to align the chartdata with respect to current seletion of stocks
-    const chartOption = { labels: [], datasets: [] };
-    if (selectedStocks && chartDatas) {
-      selectedStocks.map((selectedStock) => {
-        let dataSetItemFound = chartDatas.find(
-          (item) => item.label === selectedStock.label
-        );
-        if (dataSetItemFound) {
-          if (dataSetItemFound?.stockData) {
-            // Need to remove duplicate timestamp inorder to map to various values of stocks
-            chartOption.labels = [
-              ...new Set([
-                ...dataSetItemFound?.stockData?.t,
-                ...chartOption.labels,
-              ]),
-            ];
-            //Based on the price type the prices need to be changed.
+  /**
+   * Fetches stocks  sysmbols
+   * This methods invokes on page load and populate the select filter.
+   * @returns null
+   */
+  const getStockSymbols = async () => {
+    try {
+      setIsLoading(true);
+      const stockOptions = [];
+      const stocks = await fetchStockSymbols(exchange);
+      if (!isEmpty(stocks)) {
+        stocks.map((item, index) => {
+          if (index < stock_limit) {
+            //  Need to refactor this part in-order to load the option asyncronously the options
+            //  Now the stocks from api is limited as there api doesnt support batch calls
+            stockOptions.push({ value: item.symbol, label: item.description });
           }
-          chartOption.datasets.push(dataSetItemFound);
-        }
-      });
-      const chartLabels = [];
-      chartOption.labels.sort();
-      chartOption.labels.map((item) => {
-        chartLabels.push(moment.unix(item).format(date_format_day));
-      });
-      chartOption.labels = chartLabels;
+        });
+        setIsLoading(false);
+        setStocks(stockOptions);
+      }
+    } catch (error) {
+      console.error(error);
     }
-
-    console.log(chartOption, "chartOption");
-    setChartOptions(chartOption);
   };
 
   useEffect(() => {
     getStockSymbols();
   }, []);
 
+  useEffect(() => {
+    fetchSelectedStockPrice();
+  }, [selectedOptions]);
+
+  useEffect(() => {
+    updateStockData();
+  }, [value, selectedResolution]);
+
+  useEffect(() => {
+    formatChartData();
+  }, [chartData]);
+
   return (
     <Fragment>
-      {/* <div class="row m-3">
-        <div class="col-2">Stocks</div>
-        <div class="col-4">
-          <Select
-            closeMenuOnSelect={true}
-            components={animatedComponents}
-            isMulti
-            value={selectedOptions}
-            isLoading={isLoading}
-            onChange={handleSelectChange}
-            isOptionDisabled={() => selectedOptions.length >= 3}
-            className="basic-multi-select"
-            classNamePrefix="select"
-            options={stocks}
-          />
-        </div>
-      </div> */}
       <SelectStocks
         value={selectedOptions}
         isLoading={isLoading}
         onChange={handleSelectChange}
         options={stocks}
       />
-
-      {/* <div class="row m-3">
-        <div class="col-2">Date</div>
-        <div class="col-4">
-          <DateTimeRangePicker onChange={handleDateChange} value={value} />
-        </div>
-      </div> */}
       <DateFilter onChange={handleDateChange} value={value} />
-      {/* 
-      <div class="row m-3">
-        <div class="col-2">Resolution</div>
-        <div class="col-4">
-          <Select
-            value={selectedResolution}
-            onChange={handleResolutonChange}
-            classNamePrefix="select"
-            options={resolutionOptions}
-          />
-        </div>
-      </div> */}
-
-      {/* <div class="row m-3">
-        <div class="col-2">Price Type</div>
-        <div class="col-4">
-          <SelectButton
-            value={selectedPriceType}
-            onChange={handlePriceChange}
-            optionLabel="label"
-            options={priceTypeOptions}
-          />
-        </div>
-
-      </div> */}
-
       <Resolutions
         value={selectedResolution}
         onChange={handleResolutonChange}
       />
-
       <PriceType value={selectedPriceType} onChange={handlePriceChange} />
       <Chart data={chartOptions} />
     </Fragment>

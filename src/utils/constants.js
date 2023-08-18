@@ -18,9 +18,10 @@ export const resolutionOptions = [
   { value: "D", label: "Daily" },
 ];
 
-
 export const date_format_day = "DD-MM";
 export const date_format_month = "MM";
 export const date_format_year = "YYYY";
 
-export const exchange = "US"
+export const exchange = "US";
+
+export const stock_limit = 1000;

@@ -7,7 +7,7 @@ import "react-clock/dist/Clock.css";
 
 export default function DateFilter(props) {
   const { value, onChange } = props;
-  
+
   return (
     <Fragment>
       <div class="row m-3">
