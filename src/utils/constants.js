@@ -18,6 +18,19 @@ export const resolutionOptions = [
   { value: "D", label: "Daily" },
 ];
 
+export const reactChartOptions = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: "top",
+    },
+    title: {
+      display: true,
+      text: "Time series of prices",
+    },
+  },
+};
+
 export const date_format_day = "DD-MM";
 export const date_format_month = "MM";
 export const date_format_year = "YYYY";
