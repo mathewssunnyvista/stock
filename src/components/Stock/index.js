@@ -22,12 +22,16 @@ import moment from "moment";
 
 const animatedComponents = makeAnimated();
 
+//Defines the various price options available in stock candle api
 const priceTypeOptions = [
   { value: "c", label: "Close" },
   { value: "h", label: "High" },
   { value: "l", label: "Low" },
   { value: "o", label: "Open" },
 ];
+
+
+//Defines the various resolutions options available in stock candle api
 
 const resolutions = [
   { value: 1, label: "Last 1 Days" },
@@ -46,7 +50,9 @@ export default function Stock() {
   const [stocks, setStocks] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [chartOptions, setChartOptions] = useState([]);
-  const [value, onChange] = useState([new Date(), new Date()]);
+  const endDate = new Date();
+  const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const [value, onChange] = useState([startDate, endDate]);
   const { selectedOptions, setSelectedOptions } =
     useContext(StockSymbolContext);
 
@@ -111,7 +117,7 @@ export default function Stock() {
       //Data range provided to the api should in unix time stamp
       const from = getUnixTimeStamp(value[0]);
       const to = getUnixTimeStamp(value[1]);
-      const resolution = resolutions[3].value;
+      const resolution = resolutions[0].value;
       const stockData = await fetchStockCandles(
         selectedStock.value,
         resolution,
@@ -159,7 +165,7 @@ export default function Stock() {
         }
       });
       const chartLabels = [];
-      chartOption.labels.sort()
+      chartOption.labels.sort();
       chartOption.labels.map((item) => {
         chartLabels.push(moment.unix(item).format(format_day));
       });
