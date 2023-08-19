@@ -29,8 +29,8 @@ export default function Chart(props) {
   const { data, noDataItems } = props;
   return (
     <Fragment>
-      <div class="row">
-        <div class="col-12" data-test-id="chart">
+      <div className="row">
+        <div className="col-12" data-test-id="chart">
           {data?.datasets ? (
             <Fragment>
               <Line options={reactChartOptions} data={data} />

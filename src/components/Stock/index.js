@@ -14,9 +14,12 @@ import { isEmpty } from "lodash";
 
 import { Chart } from "..";
 import moment from "moment";
-import { date_format_day, exchange, stock_limit } from "../../utils/constants";
+import {
+  exchange,
+  stock_limit,
+} from "../../utils/constants";
 
-import { getUnixTimeStamp } from "../../utils";
+import { getLabelFormat, getUnixTimeStamp } from "../../utils";
 import PriceType from "./priceType";
 import Resolutions from "./resolutions";
 import DateFilter from "./dateFilter";
@@ -169,9 +172,14 @@ export default function Stock() {
       //Need to check the possibilty of apply same behaviour to all array elements without looping.
       const chartLabels = [];
       if (!isEmpty(chartOption?.labels)) {
+        const format = getLabelFormat(
+          value[0],
+          value[1],
+          selectedResolution?.value
+        );
         chartOption.labels.sort();
         chartOption.labels.map((item) => {
-          chartLabels.push(moment.unix(item).format(date_format_day));
+          chartLabels.push(moment.unix(item).format(format));
         });
         chartOption.labels = chartLabels;
       }
