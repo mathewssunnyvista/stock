@@ -12,6 +12,8 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { reactChartOptions } from "../../utils/constants";
+import Placeholder from "./placeholder";
+import Info from "./info";
 
 ChartJS.register(
   CategoryScale,
@@ -24,12 +26,19 @@ ChartJS.register(
 );
 
 export default function Chart(props) {
-  const { data } = props;
+  const { data, noDataItems } = props;
   return (
     <Fragment>
       <div class="row">
         <div class="col-12" data-test-id="chart">
-          {data?.datasets && <Line options={reactChartOptions} data={data} />}
+          {data?.datasets ? (
+            <Fragment>
+              <Line options={reactChartOptions} data={data} />
+              <Info items={noDataItems} />
+            </Fragment>
+          ) : (
+            <Placeholder />
+          )}
         </div>
       </div>
     </Fragment>

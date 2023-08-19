@@ -14,11 +14,7 @@ import { isEmpty } from "lodash";
 
 import { Chart } from "..";
 import moment from "moment";
-import {
-  date_format_day,
-  exchange,
-  stock_limit,
-} from "../../utils/constants";
+import { date_format_day, exchange, stock_limit } from "../../utils/constants";
 
 import { getUnixTimeStamp } from "../../utils";
 import PriceType from "./priceType";
@@ -28,6 +24,7 @@ import SelectStocks from "./selectStocks";
 
 export default function Stock() {
   const [isLoading, setIsLoading] = useState(false);
+  const [stockWithNoData, setStockWithNoData] = useState([]);
   const [stocks, setStocks] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [chartOptions, setChartOptions] = useState([]);
@@ -44,6 +41,27 @@ export default function Stock() {
 
   const { selectedResolution, setSelectedResolution } =
     useContext(StockSymbolContext);
+
+  /**
+   * Updates the stock price data whenever resolution, date gets changed
+   * Need to update the price of already plotted stock details.
+   * Multiple stocks are updated in a single API call
+   *
+   * @returns null
+   */
+
+  const updateNoStockData = async () => {
+    const stockSelected = [...selectedOptions];
+    let stockWithNoDatas = [...stockWithNoData];
+    if (!isEmpty(stockSelected)) {
+      stockWithNoDatas = stockWithNoDatas.filter((noDataItem) =>
+        stockSelected.find((item) => noDataItem.value === item.value)
+      );
+      setStockWithNoData(stockWithNoDatas);
+    } else {
+      setStockWithNoData([]);
+    }
+  };
 
   /**
    * Updates the stock price data whenever resolution, date gets changed
@@ -72,6 +90,7 @@ export default function Stock() {
         });
       }
     }
+    updateNoStockData();
   };
   /**
    * Handles the change in price type (High, Low, Close,Open price)
@@ -127,8 +146,9 @@ export default function Stock() {
     const chartDatas = [...chartData];
     const selectedStocks = [...selectedOptions];
     // Need to align the chartdata with respect to current seletion of stocks
-    const chartOption = { labels: [], datasets: [] };
+    let chartOption = {};
     if (!isEmpty(selectedStocks) && !isEmpty(chartDatas)) {
+      chartOption = { labels: [], datasets: [] };
       selectedStocks.map((selectedStock) => {
         let dataSetItemFound = chartDatas.find(
           (item) => item.label === selectedStock.label
@@ -190,6 +210,7 @@ export default function Stock() {
 
   const setStockChartItem = (stockData, selectedStock) => {
     const chartDatas = [...chartData];
+    const stockWithNoDatas = [...stockWithNoData];
 
     if (selectedStock) {
       let dataSetItemFound = chartDatas.find(
@@ -211,11 +232,17 @@ export default function Stock() {
       }
       if (stockData?.s === "no_data") {
         //No need to send to chart as the stock doesnt have price details
+        const found = stockWithNoDatas.some(
+          (item) => item.value === selectedStock.value
+        );
+        if (!found) stockWithNoDatas.push(selectedStock);
+
         dataSetItem.stockData = [];
         dataSetItem.data = [];
       }
       setChartData(chartDatas);
       formatChartData(chartDatas, selectedOptions);
+      setStockWithNoData(stockWithNoDatas);
     }
   };
 
@@ -290,6 +317,7 @@ export default function Stock() {
 
   useEffect(() => {
     fetchSelectedStockPrice();
+    updateNoStockData();
   }, [selectedOptions]);
 
   useEffect(() => {
@@ -314,7 +342,7 @@ export default function Stock() {
         onChange={handleResolutonChange}
       />
       <PriceType value={selectedPriceType} onChange={handlePriceChange} />
-      <Chart data={chartOptions} />
+      <Chart data={chartOptions} noDataItems={stockWithNoData} />
     </Fragment>
   );
 }

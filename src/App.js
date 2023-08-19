@@ -13,7 +13,10 @@ import { StockSymbolContext } from "./context";
 function App() {
   const [selectedOptions, setSelectedOptions] = React.useState([]);
   const [selectedPriceType, setSelectedPriceType] = React.useState("o");
-  const [selectedResolution, setSelectedResolution] = React.useState({ value: "D", label: "Daily" });
+  const [selectedResolution, setSelectedResolution] = React.useState({
+    value: "D",
+    label: "Daily",
+  });
 
   return (
     <div className="container">
