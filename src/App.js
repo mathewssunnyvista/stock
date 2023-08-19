@@ -1,14 +1,6 @@
 import React from "react";
 import { Logo, Dashboard } from "./components";
 import { StockSymbolContext } from "./context";
-// import { Provider } from "react-redux";
-// import { createStore } from "redux";
-// import { BrowserRouter } from "react-router-dom";
-// import moviesReducer from "./state/reducers/moviesReducer";store={store}
-
-// import MoviePage from "./pages/MoviePage";
-
-//let store = createStore(moviesReducer);
 
 function App() {
   const [selectedOptions, setSelectedOptions] = React.useState([]);

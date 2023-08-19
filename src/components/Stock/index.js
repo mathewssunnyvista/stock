@@ -317,7 +317,6 @@ export default function Stock() {
 
   useEffect(() => {
     fetchSelectedStockPrice();
-    updateNoStockData();
   }, [selectedOptions]);
 
   useEffect(() => {
