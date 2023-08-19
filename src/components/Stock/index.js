@@ -84,7 +84,7 @@ export default function Stock() {
         selectedResolution.value
       );
 
-      if (stockData && stockData.length > 0) {
+      if (!isEmpty(stockData)) {
         stockData.map((stockItem, index) => {
           setStockChartItem(stockItem, stockSelected[index]);
         });
@@ -104,7 +104,7 @@ export default function Stock() {
     setSelectedPriceType(priceType.value);
 
     const chartOption = { ...chartOptions };
-    if (chartOption.datasets) {
+    if (!isEmpty(chartOption?.datasets)) {
       chartOption.datasets.map((item) => {
         item.data = item.stockData[priceType.value];
       });

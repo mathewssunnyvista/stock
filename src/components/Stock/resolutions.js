@@ -6,9 +6,9 @@ export default function Resolutions(props) {
   const { value, onChange } = props;
   return (
     <Fragment>
-      <div class="row m-3">
-        <div class="col-2">Resolution</div>
-        <div class="col-4">
+      <div className="row m-3">
+        <div className="col-2">Resolution</div>
+        <div className="col-4">
           <Select
             value={value}
             onChange={onChange}

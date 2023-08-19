@@ -8,9 +8,9 @@ export default function SelectStocks(props) {
   const { value, isLoading, onChange, options } = props;
   return (
     <Fragment>
-      <div class="row m-3">
-        <div class="col-2">Stocks</div>
-        <div class="col-4">
+      <div className="row m-3">
+        <div className="col-2">Stocks</div>
+        <div className="col-4">
           <Select
             closeMenuOnSelect={true}
             components={animatedComponents}

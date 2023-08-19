@@ -1,14 +1,15 @@
 import { Fragment } from "react";
 import Icon from "../../assets/images/chartIcon.svg";
+import { placeholder_text } from "../../utils/constants";
 export default function Placeholder() {
   return (
     <Fragment>
-      <div class="row">
-        <div class="col-lg-12 text-center">
-          <p class="placeholder-glow">
-            <span class="placeholder col-12 bg-light">
-              <img src={Icon} />
-              <p>No data for curent period</p>
+      <div className="row">
+        <div className="col-lg-12 text-center">
+          <p className="placeholder-glow">
+            <span className="placeholder col-12 bg-light">
+              <img src={Icon} alt="chart Icon" />
+              <p>{placeholder_text}</p>
             </span>
           </p>
         </div>

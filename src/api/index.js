@@ -1,6 +1,7 @@
 import { basePath, token } from "../config";
 
 import axios from "axios";
+import { isEmpty } from "lodash";
 
 /**
  * Fetches the supported stocks
@@ -52,8 +53,8 @@ export const fetchStockCandle = async (stockSymbol, resolution, from, to) => {
  * @returns {Promise<Object>} Response object
  */
 export const fetchStockCandles = async (stockSymbols, resolution, from, to) => {
-  console.log(stockSymbols, "stockSymbols");
-  if (stockSymbols && stockSymbols.length > 0) {
+
+  if (!isEmpty(stockSymbols)) {
     const url = [];
     stockSymbols.map((item) => {
       url.push(

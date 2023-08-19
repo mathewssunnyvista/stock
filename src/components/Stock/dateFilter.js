@@ -6,9 +6,9 @@ export default function DateFilter(props) {
 
   return (
     <Fragment>
-      <div class="row m-3">
-        <div class="col-2">Date</div>
-        <div class="col-4">
+      <div className="row m-3">
+        <div className="col-2">Date</div>
+        <div className="col-4">
           <DateTimeRangePicker onChange={onChange} value={value} />
         </div>
       </div>

@@ -1,9 +1,13 @@
+import { isEmpty } from "lodash";
 import { Fragment } from "react";
+import { info_text } from "../../utils/constants";
 
 export default function Info(props) {
   const { items } = props;
 
-  let stocksWithNoData = items.map((item) => item.label);
+  let stocksWithNoData = !isEmpty(items)
+    ? items.map((item) => item.label)
+    : undefined;
 
   const message = stocksWithNoData
     ? stocksWithNoData.join(", ").toLowerCase()
@@ -11,11 +15,11 @@ export default function Info(props) {
 
   return (
     <Fragment>
-      <div class="row">
-        <div class="col-lg-12 text-center">
+      <div className="row">
+        <div className="col-lg-12 text-center">
           {message && (
             <p>
-              <small>{`${message} stocks are not considered in this chart`}</small>
+              <small>{`${message} ${info_text}`}</small>
             </p>
           )}
         </div>

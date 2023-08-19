@@ -38,3 +38,6 @@ export const date_format_year = "YYYY";
 export const exchange = "US";
 
 export const stock_limit = 1000;
+
+export const placeholder_text = "No data for curent period"
+export const info_text = "stocks are not considered in this chart"
