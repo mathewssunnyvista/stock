@@ -31,8 +31,9 @@ export const reactChartOptions = {
   },
 };
 
-export const date_format_day = "DD-MM";
-export const date_format_month = "w";
+export const date_format = "DD-MM";
+export const date_format_month = "MMM";
+export const date_format_day = "dddd";
 export const date_format_year = "YYYY";
 
 export const exchange = "US";
