@@ -2,19 +2,11 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { Stock } from "../..";
 import StockProvider from "../../../context/StockProvider";
-// test('loads items eventually', async () => {
-//   render(<Stock />)
-
-//   // Click button
-//   fireEvent.click(screen.getByText('Load'))
-
-//   // Wait for page to update with query text
-//   const items = await screen.findAllByText(/Item #[0-9]: /)
-//   expect(items).toHaveLength(10)
-// })
+import selectEvent from "react-select-event";
+import userEvent from "@testing-library/user-event";
 
 describe("Stock/Index", () => {
-  test("App displays employee name properly", () => {
+  test("The home screen displays the default selection of the filers", async () => {
     const dummyItem = { value: "dummy", label: "dummyLabel" };
 
     const selectedOptions = dummyItem;
@@ -23,7 +15,6 @@ describe("Stock/Index", () => {
     const setSelectedPriceType = jest.fn();
     const setSelectedResolution = jest.fn();
     const selectedResolution = dummyItem;
-
     render(
       <StockProvider
         value={{

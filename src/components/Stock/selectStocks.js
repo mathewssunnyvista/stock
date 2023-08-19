@@ -12,6 +12,7 @@ export default function SelectStocks(props) {
         <div className="col-2">Stocks</div>
         <div className="col-4">
           <Select
+            data-testid="stock-selector"
             closeMenuOnSelect={true}
             components={animatedComponents}
             isMulti
