@@ -87,7 +87,23 @@ The projects start in 3000 port
 ```
 <hostName>:3000/
 ```
+## 🚀 Deployment <a name = "deployment"></a>
 
+
+Build the project using : 
+
+```
+npm run build
+```
+
+A 'build' folder will be created in the root and should be used for deployment purposes.
+
+## ⛏️ Built Using <a name = "built_using"></a>
+
+- [API]( https://finnhub.io/docs/api#introduction) - Finhub API
+- [ReactJs](https://reactjs.org/) - Web Framework
+- [React Bootstrap](https://react-bootstrap.github.io) - Front-end Framework
+- [NodeJs](https://nodejs.org/en/) - Server Environment
 
 ## ✍️ Authors <a name = "authors"></a>
 
