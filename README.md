@@ -101,7 +101,7 @@ A 'build' folder will be created in the root and should be used for deployment p
 ## ⛏️ Built Using <a name = "built_using"></a>
 
 - [API]( https://finnhub.io/docs/api#introduction) - Finhub API
-- [ReactJs](https://reactjs.org/) - Web Framework
+- [ReactJs](https://react.dev/) - Web Framework
 - [React Bootstrap](https://react-bootstrap.github.io) - Front-end Framework
 - [NodeJs](https://nodejs.org/en/) - Server Environment
 

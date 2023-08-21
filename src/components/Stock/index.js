@@ -14,16 +14,15 @@ import { isEmpty } from "lodash";
 
 import { Chart } from "..";
 import moment from "moment";
-import {
-  exchange,
-  stock_limit,
-} from "../../utils/constants";
+import { exchange, stock_limit } from "../../utils/constants";
 
 import { getLabelFormat, getUnixTimeStamp } from "../../utils";
 import PriceType from "./priceType";
 import Resolutions from "./resolutions";
 import DateFilter from "./dateFilter";
 import SelectStocks from "./selectStocks";
+import Info from "../Chart/info";
+import { response_with_data, response_with_no_data } from "./constants";
 
 export default function Stock() {
   const [isLoading, setIsLoading] = useState(false);
@@ -54,15 +53,19 @@ export default function Stock() {
    */
 
   const updateNoStockData = async () => {
-    const stockSelected = [...selectedOptions];
-    let stockWithNoDatas = [...stockWithNoData];
-    if (!isEmpty(stockSelected)) {
-      stockWithNoDatas = stockWithNoDatas.filter((noDataItem) =>
-        stockSelected.find((item) => noDataItem.value === item.value)
-      );
-      setStockWithNoData(stockWithNoDatas);
-    } else {
-      setStockWithNoData([]);
+    try {
+      const stockSelected = [...selectedOptions];
+      let stockWithNoDatas = [...stockWithNoData];
+      if (!isEmpty(stockSelected)) {
+        stockWithNoDatas = stockWithNoDatas.filter((noDataItem) =>
+          stockSelected.find((item) => noDataItem.value === item.value)
+        );
+        setStockWithNoData(stockWithNoDatas);
+      } else {
+        setStockWithNoData([]);
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -75,25 +78,29 @@ export default function Stock() {
    */
 
   const updateStockData = async () => {
-    const stockSelected = [...selectedOptions];
-    if (!isEmpty(stockSelected)) {
-      const from = getUnixTimeStamp(value[0]);
-      const to = getUnixTimeStamp(value[1]);
+    try {
+      const stockSelected = [...selectedOptions];
+      if (!isEmpty(stockSelected)) {
+        const from = getUnixTimeStamp(value[0]);
+        const to = getUnixTimeStamp(value[1]);
 
-      const stockData = await fetchStockPrices(
-        stockSelected,
-        from,
-        to,
-        selectedResolution.value
-      );
+        const stockData = await fetchStockPrices(
+          stockSelected,
+          from,
+          to,
+          selectedResolution.value
+        );
 
-      if (!isEmpty(stockData)) {
-        stockData.map((stockItem, index) => {
-          setStockChartItem(stockItem, stockSelected[index]);
-        });
+        if (!isEmpty(stockData)) {
+          stockData.map((stockItem, index) => {
+            setStockChartItem(stockItem, stockSelected[index]);
+          });
+        }
       }
+      updateNoStockData();
+    } catch (error) {
+      console.error(error);
     }
-    updateNoStockData();
   };
   /**
    * Handles the change in price type (High, Low, Close,Open price)
@@ -104,15 +111,19 @@ export default function Stock() {
    */
 
   const handlePriceChange = (priceType) => {
-    setSelectedPriceType(priceType.value);
+    try {
+      setSelectedPriceType(priceType.value);
 
-    const chartOption = { ...chartOptions };
-    if (!isEmpty(chartOption?.datasets)) {
-      chartOption.datasets.map((item) => {
-        item.data = item.stockData[priceType.value];
-      });
+      const chartOption = { ...chartOptions };
+      if (!isEmpty(chartOption?.datasets)) {
+        chartOption.datasets.map((item) => {
+          item.data = item.stockData[priceType.value];
+        });
+      }
+      setChartOptions(chartOption);
+    } catch (error) {
+      console.error(error);
     }
-    setChartOptions(chartOption);
   };
 
   /**
@@ -146,45 +157,49 @@ export default function Stock() {
    */
 
   const formatChartData = () => {
-    const chartDatas = [...chartData];
-    const selectedStocks = [...selectedOptions];
-    // Need to align the chartdata with respect to current seletion of stocks
-    let chartOption = {};
-    if (!isEmpty(selectedStocks) && !isEmpty(chartDatas)) {
-      chartOption = { labels: [], datasets: [] };
-      selectedStocks.map((selectedStock) => {
-        let dataSetItemFound = chartDatas.find(
-          (item) => item.label === selectedStock.label
-        );
-        if (dataSetItemFound) {
-          if (dataSetItemFound?.stockData) {
-            // Timestamp need to be grouped without duplicates.
-            chartOption.labels = [
-              ...new Set([
-                ...dataSetItemFound?.stockData?.t,
-                ...chartOption.labels,
-              ]),
-            ];
+    try {
+      const chartDatas = [...chartData];
+      const selectedStocks = [...selectedOptions];
+      // Need to align the chartdata with respect to current seletion of stocks
+      let chartOption = {};
+      if (!isEmpty(selectedStocks) && !isEmpty(chartDatas)) {
+        chartOption = { labels: [], datasets: [] };
+        selectedStocks.map((selectedStock) => {
+          let dataSetItemFound = chartDatas.find(
+            (item) => item.label === selectedStock.label
+          );
+          if (dataSetItemFound) {
+            if (dataSetItemFound?.stockData) {
+              // Timestamp need to be grouped without duplicates.
+              chartOption.labels = [
+                ...new Set([
+                  ...dataSetItemFound?.stockData?.t,
+                  ...chartOption.labels,
+                ]),
+              ];
+            }
+            chartOption.datasets.push(dataSetItemFound);
           }
-          chartOption.datasets.push(dataSetItemFound);
-        }
-      });
-      //Need to check the possibilty of apply same behaviour to all array elements without looping.
-      const chartLabels = [];
-      if (!isEmpty(chartOption?.labels)) {
-        const format = getLabelFormat(
-          value[0],
-          value[1],
-          selectedResolution?.value
-        );
-        chartOption.labels.sort();
-        chartOption.labels.map((item) => {
-          chartLabels.push(moment.unix(item).format(format));
         });
-        chartOption.labels = chartLabels;
+        //Need to check the possibilty of apply same behaviour to all array elements without looping.
+        const chartLabels = [];
+        if (!isEmpty(chartOption?.labels)) {
+          const format = getLabelFormat(
+            value[0],
+            value[1],
+            selectedResolution?.value
+          );
+          chartOption.labels.sort();
+          chartOption.labels.map((item) => {
+            chartLabels.push(moment.unix(item).format(format));
+          });
+          chartOption.labels = chartLabels;
+        }
       }
+      setChartOptions(chartOption);
+    } catch (error) {
+      console.error(error);
     }
-    setChartOptions(chartOption);
   };
 
   /**
@@ -200,10 +215,14 @@ export default function Stock() {
    */
 
   const fetchStockPrices = async (stockSelected, from, to, resolution) => {
-    const stockData = Array.isArray(stockSelected)
-      ? await fetchStockCandles(stockSelected, resolution, from, to)
-      : await fetchStockCandle(stockSelected.value, resolution, from, to);
-    return stockData;
+    try {
+      const stockData = Array.isArray(stockSelected)
+        ? await fetchStockCandles(stockSelected, resolution, from, to)
+        : await fetchStockCandle(stockSelected.value, resolution, from, to);
+      return stockData;
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   /**
@@ -217,40 +236,44 @@ export default function Stock() {
    */
 
   const setStockChartItem = (stockData, selectedStock) => {
-    const chartDatas = [...chartData];
-    const stockWithNoDatas = [...stockWithNoData];
+    try {
+      const chartDatas = [...chartData];
+      const stockWithNoDatas = [...stockWithNoData];
 
-    if (selectedStock) {
-      let dataSetItemFound = chartDatas.find(
-        (item) => item.label === selectedStock.label
-      );
-
-      const dataSetItem = dataSetItemFound
-        ? dataSetItemFound
-        : {
-            label: selectedStock.label,
-            borderColor: faker.vehicle.color(),
-            backgroundColor: faker.vehicle.color(),
-          };
-
-      if (stockData?.s === "ok") {
-        dataSetItem.stockData = stockData;
-        dataSetItem.data = stockData[selectedPriceType];
-        chartDatas.push(dataSetItem);
-      }
-      if (stockData?.s === "no_data") {
-        //No need to send to chart as the stock doesnt have price details
-        const found = stockWithNoDatas.some(
-          (item) => item.value === selectedStock.value
+      if (selectedStock) {
+        let dataSetItemFound = chartDatas.find(
+          (item) => item.label === selectedStock.label
         );
-        if (!found) stockWithNoDatas.push(selectedStock);
 
-        dataSetItem.stockData = [];
-        dataSetItem.data = [];
+        const dataSetItem = dataSetItemFound
+          ? dataSetItemFound
+          : {
+              label: selectedStock.label,
+              borderColor: faker.vehicle.color(),
+              backgroundColor: faker.vehicle.color(),
+            };
+
+        if (stockData?.s === response_with_data) {
+          dataSetItem.stockData = stockData;
+          dataSetItem.data = stockData[selectedPriceType];
+          chartDatas.push(dataSetItem);
+        }
+        if (stockData?.s === response_with_no_data) {
+          //No need to send to chart as the stock doesnt have price details
+          const found = stockWithNoDatas.some(
+            (item) => item.value === selectedStock.value
+          );
+          if (!found) stockWithNoDatas.push(selectedStock);
+
+          dataSetItem.stockData = [];
+          dataSetItem.data = [];
+        }
+        setChartData(chartDatas);
+        formatChartData(chartDatas, selectedOptions);
+        setStockWithNoData(stockWithNoDatas);
       }
-      setChartData(chartDatas);
-      formatChartData(chartDatas, selectedOptions);
-      setStockWithNoData(stockWithNoDatas);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -262,23 +285,27 @@ export default function Stock() {
    */
 
   const fetchSelectedStockPrice = async () => {
-    const selectedStocks = [...selectedOptions];
-    if (!isEmpty(selectedStocks)) {
-      const selectedStock = selectedStocks[selectedStocks.length - 1];
+    try {
+      const selectedStocks = [...selectedOptions];
+      if (!isEmpty(selectedStocks)) {
+        const selectedStock = selectedStocks[selectedStocks.length - 1];
 
-      const from = getUnixTimeStamp(value[0]);
-      const to = getUnixTimeStamp(value[1]);
-      const resolution = selectedResolution.value;
+        const from = getUnixTimeStamp(value[0]);
+        const to = getUnixTimeStamp(value[1]);
+        const resolution = selectedResolution.value;
 
-      const stockData = await fetchStockPrices(
-        selectedStock,
-        from,
-        to,
-        resolution
-      );
-      setStockChartItem(stockData, selectedStock);
-    } else {
-      setChartOptions({});
+        const stockData = await fetchStockPrices(
+          selectedStock,
+          from,
+          to,
+          resolution
+        );
+        setStockChartItem(stockData, selectedStock);
+      } else {
+        setChartOptions({});
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -349,6 +376,7 @@ export default function Stock() {
         onChange={handleResolutonChange}
       />
       <PriceType value={selectedPriceType} onChange={handlePriceChange} />
+      <Info items={stockWithNoData} />
       <Chart data={chartOptions} noDataItems={stockWithNoData} />
     </Fragment>
   );

@@ -13,7 +13,6 @@ import {
 import { Line } from "react-chartjs-2";
 import { reactChartOptions } from "../../utils/constants";
 import Placeholder from "./placeholder";
-import Info from "./info";
 
 ChartJS.register(
   CategoryScale,
@@ -26,7 +25,7 @@ ChartJS.register(
 );
 
 export default function Chart(props) {
-  const { data, noDataItems } = props;
+  const { data } = props;
   return (
     <Fragment>
       <div className="row">
@@ -34,7 +33,6 @@ export default function Chart(props) {
           {data?.datasets ? (
             <Fragment>
               <Line options={reactChartOptions} data={data} />
-              <Info items={noDataItems} />
             </Fragment>
           ) : (
             <Placeholder />
