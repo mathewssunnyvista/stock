@@ -17,7 +17,7 @@ export const fetchStockSymbols = async (exchange) => {
     })
     .catch((error) => {
       // Need to set error boundary
-      console.log(error);
+      //  console.log(error);
     });
 
   return data;
@@ -39,7 +39,7 @@ export const fetchStockCandle = async (stockSymbol, resolution, from, to) => {
     })
     .catch((error) => {
       // Need to set error boundary
-      console.log(error);
+      // console.log(error);
     });
 
   return data;
@@ -53,7 +53,6 @@ export const fetchStockCandle = async (stockSymbol, resolution, from, to) => {
  * @returns {Promise<Object>} Response object
  */
 export const fetchStockCandles = async (stockSymbols, resolution, from, to) => {
-
   if (!isEmpty(stockSymbols)) {
     const url = [];
     stockSymbols.map((item) => {

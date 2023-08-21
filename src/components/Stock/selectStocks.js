@@ -1,6 +1,7 @@
 import React, { Fragment } from "react";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
+import { stock_options_limit } from "../../utils/constants";
 
 const animatedComponents = makeAnimated();
 
@@ -19,7 +20,7 @@ export default function SelectStocks(props) {
             value={value}
             isLoading={isLoading}
             onChange={onChange}
-            isOptionDisabled={() => value.length >= 3}
+            isOptionDisabled={() => value.length >= stock_options_limit}
             className="basic-multi-select"
             classNamePrefix="select"
             options={options}

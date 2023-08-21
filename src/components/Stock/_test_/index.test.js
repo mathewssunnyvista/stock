@@ -1,10 +1,20 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 
 import { Stock } from "../..";
 import StockProvider from "../../../context/StockProvider";
-import selectEvent from "react-select-event";
-import userEvent from "@testing-library/user-event";
 
+jest.mock("../../../api", () => {
+  const original = jest.requireActual("../../../api");
+  const dummyStocks = [
+    { value: "1", label: "dummyLabel1" },
+    { value: "2", label: "dummyLabel2" },
+  ];
+  return {
+    ...original,
+    fetchStockSymbols: jest.fn().mockImplementation(() => Promise.resolve({ data: dummyStocks })),    
+ 
+  };
+});
 describe("Stock/Index", () => {
   test("The home screen displays the default selection of the filers", async () => {
     const dummyItem = { value: "dummy", label: "dummyLabel" };

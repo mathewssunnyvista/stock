@@ -1,4 +1,3 @@
-//atoms
 import Logo from "./Logo";
 import Chart from "./Chart";
 import Stock from "./Stock";

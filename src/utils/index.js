@@ -1,4 +1,3 @@
-import { isEmpty } from "lodash";
 import { date_format, date_format_day, date_format_month } from "./constants";
 
 import moment from "moment";

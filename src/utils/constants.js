@@ -18,6 +18,7 @@ export const resolutionOptions = [
   { value: "D", label: "Daily" },
 ];
 
+//Defines react chart legend Options
 export const reactChartOptions = {
   responsive: true,
   plugins: {
@@ -42,3 +43,5 @@ export const stock_limit = 1000;
 
 export const placeholder_text = "No data for curent period"
 export const info_text = "stocks are not considered in this chart"
+
+export const stock_options_limit = 3

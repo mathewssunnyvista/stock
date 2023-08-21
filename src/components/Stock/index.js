@@ -13,16 +13,16 @@ import { StockSymbolContext } from "../../context";
 import { isEmpty } from "lodash";
 
 import { Chart } from "..";
-import moment from "moment";
 import { exchange, stock_limit } from "../../utils/constants";
 
-import { getLabelFormat, getUnixTimeStamp } from "../../utils";
+import { getUnixTimeStamp } from "../../utils";
 import PriceType from "./priceType";
 import Resolutions from "./resolutions";
 import DateFilter from "./dateFilter";
 import SelectStocks from "./selectStocks";
 import Info from "../Chart/info";
 import { response_with_data, response_with_no_data } from "./constants";
+import { getChartLabels } from "./helper";
 
 export default function Stock() {
   const [isLoading, setIsLoading] = useState(false);
@@ -181,18 +181,14 @@ export default function Stock() {
             chartOption.datasets.push(dataSetItemFound);
           }
         });
-        //Need to check the possibilty of apply same behaviour to all array elements without looping.
-        const chartLabels = [];
+
         if (!isEmpty(chartOption?.labels)) {
-          const format = getLabelFormat(
+          const chartLabels = getChartLabels(
+            chartOption,
             value[0],
             value[1],
-            selectedResolution?.value
+            selectedResolution
           );
-          chartOption.labels.sort();
-          chartOption.labels.map((item) => {
-            chartLabels.push(moment.unix(item).format(format));
-          });
           chartOption.labels = chartLabels;
         }
       }
